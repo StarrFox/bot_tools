@@ -4,4 +4,4 @@ __license__ = "MIT"
 __copyright__ = "Copyright © 2019-2019 StarrFox"
 __version__ = "0.0.2"
 
-from .base_bot import *
+from .bot import Bot
