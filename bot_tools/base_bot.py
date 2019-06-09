@@ -5,6 +5,8 @@ import aiohttp
 import logging
 import os
 import traceback
+import importlib
+import sys
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
@@ -38,9 +40,6 @@ class subcontext(commands.Context):
         return self.message.created_at
 
 class Bot(commands.Bot):
-    """
-    Default bot
-    """
 
     def __init__(self, prefix: str, owners: list, extension_dir: str = None, **options):
         super().__init__(prefix, **options)
@@ -49,13 +48,30 @@ class Bot(commands.Bot):
         self.first_run = True # make on_ready only run once
         self.extension_dir = extension_dir
         self.owners = owners
+        self.paginate = paginate
+        self.ready_funcs = []
+
+    def get_message(self, id):
+        return discord.utils.get(
+            self.cached_messages,
+            id = id
+        )
+
+    def add_ready_func(self, func):
+        self.ready_funcs.append(func)
 
     async def get_context(self, message, cls = None):
         return await super().get_context(message, cls = cls or subcontext)
 
+    async def on_message_edit(self, before, after):
+        if not after.embeds and not after.pinned:
+            await self.process_commands(after)
+
     async def on_ready(self):
         if not self.first_run:
             return
+        for func in self.ready_funcs:
+            await func
         if self.extension_dir:
             await self.load_extensions()
         self.first_run = False
@@ -69,3 +85,33 @@ class Bot(commands.Bot):
                 self.logger.info(f"Loaded {ext}")
             except:
                 self.logger.critical(f"{ext} failed:\n{traceback.format_exc()}")
+
+    def _load_from_module_spec(self, lib, key, **kwargs):
+        try:
+            setup = getattr(lib, 'setup')
+        except AttributeError:
+            del sys.modules[key]
+            raise commands.errors.NoEntryPointError(key)
+
+        try:
+            if kwargs:
+                setup(self, **kwargs)
+            else:
+                setup(self)
+        except Exception as e:
+            self._remove_module_references(lib.__name__)
+            self._call_module_finalizers(lib, key)
+            raise commands.errors.ExtensionFailed(key, e) from e
+        else:
+            self._BotBase__extensions[key] = lib
+
+    def load_extension(self, name, **kwargs):
+        if name in self._BotBase__extensions:
+            raise commands.errors.ExtensionAlreadyLoaded(name)
+
+        try:
+            lib = importlib.import_module(name)
+        except ImportError as e:
+            raise commands.errors.ExtensionNotFound(name, e) from e
+        else:
+            self._load_from_module_spec(lib, name, **kwargs)
