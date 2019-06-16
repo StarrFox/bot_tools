@@ -213,6 +213,6 @@ def setup(bot, **kwargs):
     emojis["error"] = kwargs.get("error") or "\N{DOUBLE EXCLAMATION MARK}"
     emojis["syntax"] = kwargs.get("syntax") or "\N{HEAVY EXCLAMATION MARK SYMBOL}"
     emojis["tracebacks"] = kwargs.get("tracebacks") or "\N{BLACK DOWN-POINTING DOUBLE TRIANGLE}"
-    settings["retain"] = kwargs.get("retain") or True
-    settings["scope_prefix"] = kwargs.get("scope_prefix") or ""
+    settings["retain"] = kwargs.get("retain") if not kwargs.get("retain") is None else True
+    settings["scope_prefix"] = kwargs.get("scope_prefix") if not kwargs.get("scope_prefix") is None else "_"
     bot.add_cog(sub_jsk(bot))

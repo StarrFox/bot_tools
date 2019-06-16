@@ -1,4 +1,4 @@
-__title__ = "bot_tools"
+__title__ = "bot_stuff"
 __author__ = "StarrFox"
 __license__ = "MIT"
 __copyright__ = "Copyright © 2019-2019 StarrFox"
