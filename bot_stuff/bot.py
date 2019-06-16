@@ -41,7 +41,7 @@ class subcontext(commands.Context):
 
 class Bot(commands.Bot):
 
-    def __init__(self, prefix: str, owners: list, extension_dir: str = None, **options):
+    def __init__(self, prefix, owners: list, extension_dir: str = None, **options):
         super().__init__(prefix, **options)
         self.logger = logging.getLogger(__name__)
         self.session = aiohttp.ClientSession(loop=self.loop)
