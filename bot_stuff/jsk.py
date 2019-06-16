@@ -214,5 +214,5 @@ def setup(bot, **kwargs):
     emojis["syntax"] = kwargs.get("syntax") or "\N{HEAVY EXCLAMATION MARK SYMBOL}"
     emojis["tracebacks"] = kwargs.get("tracebacks") or "\N{BLACK DOWN-POINTING DOUBLE TRIANGLE}"
     settings["retain"] = kwargs.get("retain") or True
-    settings["scope_prefix"] = kwargs.get("scope_prefix") or "_"
+    settings["scope_prefix"] = kwargs.get("scope_prefix") or ""
     bot.add_cog(sub_jsk(bot))
