@@ -34,7 +34,7 @@ try:
 except ImportError:
     psutil = None
 
-def get_arg_dict(ctx,):
+def get_arg_dict(ctx):
     raw_var_dict = {
         'author': ctx.author,
         'bot': ctx.bot,

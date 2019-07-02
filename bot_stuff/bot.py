@@ -49,7 +49,7 @@ class Bot(commands.Bot):
         self.extension_dir = extension_dir
         self.owners = owners
         self.paginate = paginate
-        self.ready_funcs = []
+        self.ready_funcs = {}
 
     def get_message(self, id):
         return discord.utils.get(
@@ -57,8 +57,8 @@ class Bot(commands.Bot):
             id = id
         )
 
-    def add_ready_func(self, func):
-        self.ready_funcs.append(func)
+    def add_ready_func(self, func, *args, **kwargs):
+        self.ready_funcs[func] = {"args": args, "kwargs": kwargs}
 
     async def get_context(self, message, cls = None):
         return await super().get_context(message, cls = cls or subcontext)
@@ -70,13 +70,17 @@ class Bot(commands.Bot):
     async def on_ready(self):
         if not self.first_run:
             return
-        for func in self.ready_funcs:
-            await func
+        for func in self.ready_funcs.keys():
+            await discord.utils.maybe_coroutine(
+                func,
+                *self.ready_funcs[func]["args"],
+                **self.ready_funcs[func]["kwargs"]
+            )
         if self.extension_dir:
-            await self.load_extensions()
+            await self.load_mods()
         self.first_run = False
 
-    async def load_extensions(self):
+    async def load_mods(self):
         for ext in os.listdir('cogs'):
             try:
                 if not ext.endswith(".py"):
