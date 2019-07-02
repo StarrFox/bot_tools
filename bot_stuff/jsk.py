@@ -101,8 +101,19 @@ class sub_jsk(cog.Jishaku):
         self.last_result = None
         self.start_time = datetime.datetime.now()
         self.tasks = collections.deque()
-        self.task_count: int = 0
-        self.arg_prefix = ''
+        self.task_count = 0
+
+    def bot_level(self):
+        """
+        Brings all the commands to the bot level
+        """
+        for cmd in self.__cog_commands__:
+            if isinstance(cmd, commands.core.Group) or cmd.name == "hide":
+                continue
+            self.bot.remove_command(cmd)
+            cmd.parent = None
+            cmd.cog = self
+            self.bot.add_command(cmd)
 
     @commands.group(name="jishaku", aliases=["jsk"], hidden=True, invoke_without_command=True, ignore_extra=False)
     async def jsk(self, ctx):
@@ -216,3 +227,5 @@ def setup(bot, **kwargs):
     settings["retain"] = kwargs.get("retain") if not kwargs.get("retain") is None else True
     settings["scope_prefix"] = kwargs.get("scope_prefix") if not kwargs.get("scope_prefix") is None else "_"
     bot.add_cog(sub_jsk(bot))
+    if kwargs.get("bot_level_cmds"):
+        bot.get_cog("sub_jsk").bot_level()
