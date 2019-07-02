@@ -92,7 +92,7 @@ class ReactorSub(ReplResponseReactor):
             self.loop.create_task(traceback_sender(self.message, tmsg, self.bot))
         return True
 
-class sub_jsk(cog.Jishaku):
+class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
 
     def __init__(self, bot):
         self.bot = bot
@@ -107,13 +107,15 @@ class sub_jsk(cog.Jishaku):
         """
         Brings all the commands to the bot level
         """
+        just_jsk = self.bot.remove_command("jishaku")
+        just_jsk.all_commands = {}
         for cmd in self.__cog_commands__:
             if isinstance(cmd, commands.core.Group) or cmd.name == "hide":
                 continue
-            self.bot.remove_command(cmd)
             cmd.parent = None
             cmd.cog = self
             self.bot.add_command(cmd)
+        self.bot.add_command(just_jsk)
 
     @commands.group(name="jishaku", aliases=["jsk"], hidden=True, invoke_without_command=True, ignore_extra=False)
     async def jsk(self, ctx):
