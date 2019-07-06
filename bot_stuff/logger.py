@@ -52,8 +52,12 @@ class logger(commands.Cog):
         elif isinstance(error, commands.UserInputError):
             await ctx.send("Command usage error")
             return await ctx.send_help(ctx.command)
+        elif isinstance(error, commands.MissingPermissions):
+            return await ctx.send(f"You're missing the {', '.join(error.missing_perms)} permission(s) needed to run this command")
+        elif isinstance(error, commands.BotMissingPermissions):
+            return await ctx.send(f"I'm missing the {', '.join(error.missing_perms)} permission(s) needed to run this command")
         elif isinstance(error, commands.CheckFailure):
-            return await ctx.send("You are missing required permission(s)")
+            return await ctx.send("You don't have access to this command")
         trace = traceback.format_exception(type(error), error, error.__traceback__)
         log = f"Errorlog guild={ctx.guild.id} author={ctx.author.id} content={ctx.message.content} traceback=\n{''.join(trace)}"
         await self.bot.paginate(log, self.log_channel)
