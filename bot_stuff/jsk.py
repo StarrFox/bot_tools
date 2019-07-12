@@ -240,6 +240,21 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
         finally:
             scope.clear_intersection(arg_dict)
 
+    @jsk.command(name="debug", aliases=["dbg"])
+    async def jsk_debug(self, ctx: commands.Context, *, command_string: str):
+        """
+        Run a command timing execution and catching exceptions.
+        """
+        alt_ctx = await copy_context_with(ctx, content=ctx.prefix + command_string)
+        if alt_ctx.command is None:
+            return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
+        start = time.perf_counter()
+        async with ReactorSub(ctx.message, self.bot):
+            with self.submit(ctx):
+                await alt_ctx.command.invoke(alt_ctx)
+        end = time.perf_counter()
+        return await ctx.send(f"Command `{alt_ctx.command.qualified_name}` finished in {end - start:.3f}s.")
+
 emojis = {}
 settings = {}
 def setup(bot, **kwargs):
