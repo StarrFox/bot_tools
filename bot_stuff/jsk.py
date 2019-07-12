@@ -14,6 +14,7 @@ import sys
 import time
 import traceback
 import typing
+import platform
 
 import discord
 import humanize
@@ -127,7 +128,7 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
         summary = [
             f"Jishaku: v{__version__}, loaded {humanize.naturaltime(self.load_time)}",
             f"Python: {sys.version}".replace("\n", ""),
-            f"HostOS: {sys.platform}",
+            f"HostOS: {platform.platform()}",
             f"Discord.py: v{package_version('discord.py')}",
             ""
         ]
