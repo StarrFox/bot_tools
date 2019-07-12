@@ -255,6 +255,26 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
         end = time.perf_counter()
         return await ctx.send(f"Command `{alt_ctx.command.qualified_name}` finished in {end - start:.3f}s.")
 
+    @jsk.command(name="shell", aliases=["sh"])
+    async def jsk_shell(self, ctx: commands.Context, *, argument: CodeblockConverter):
+        """
+        Executes statements in the system shell.
+        This uses the system shell as defined in $SHELL, or `/bin/bash` otherwise.
+        Execution can be cancelled by closing the paginator.
+        """
+        async with ReactorSub(ctx.message, self.bot):
+            with self.submit(ctx):
+                paginator = WrappedPaginator(prefix="```sh", max_size=1985)
+                paginator.add_line(f"$ {argument.content}\n")
+                interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
+                self.bot.loop.create_task(interface.send_to(ctx))
+                with ShellReader(argument.content) as reader:
+                    async for line in reader:
+                        if interface.closed:
+                            return
+                        await interface.add_line(line)
+                await interface.add_line(f"\n[status] Return code {reader.close_code}")
+
 emojis = {}
 settings = {}
 def setup(bot, **kwargs):
