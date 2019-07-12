@@ -1,5 +1,5 @@
 from jishaku import cog
-from jishaku.exception_handling import *
+from jishaku.exception_handling import attempt_add_reaction, do_after_sleep, ReplResponseReactor
 
 import asyncio
 import collections
@@ -15,6 +15,7 @@ import time
 import traceback
 import typing
 import platform
+import subprocess
 
 import discord
 import humanize
@@ -49,17 +50,36 @@ def get_arg_dict(ctx):
     }
     return {f'{settings["scope_prefix"]}{k}': v for k, v in raw_var_dict.items()}
 
-async def traceback_sender(basemsg, tmsg, bot):
-    await basemsg.add_reaction(emojis["tracebacks"])
+def get_traceback(verbosity: int, *exc_info):
+    etype, value, trace = exc_info
+    traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace("``", "`\u200b`")
+    paginator = commands.Paginator(prefix='```py')
+    for line in traceback_content.split('\n'):
+        paginator.add_line(line)
+    return paginator
+
+async def traceback_sender(msg, bot, *exc_info):
+    await attempt_add_reaction(msg, emojis["tracebacks"])
+    paginator = get_traceback(8, *exc_info)
     try:
         await bot.wait_for(
             "reaction_add",
-            check = lambda r, u: u == basemsg.author and str(r) == emojis["tracebacks"] and r.message.id == basemsg.id,
+            check = lambda r, u: u == msg.author and str(r) == emojis["tracebacks"] and r.message.id == msg.id,
             timeout = 60
         )
-        await basemsg.channel.send(tmsg.content)
+        message = None
+        for page in paginator.pages:
+            await msg.channel.send(page)
+        return message
     except:
         pass
+
+async def send_traceback(destination: discord.abc.Messageable, verbosity: int, *exc_info):
+    paginator = get_traceback(verbosity, *exc_info)
+    message = None
+    for page in paginator.pages:
+        message = await destination.send(page)
+    return message
 
 class ReactorSub(ReplResponseReactor):
 
@@ -89,8 +109,10 @@ class ReactorSub(ReplResponseReactor):
             await send_traceback(self.message.channel, 0, exc_type, exc_val, exc_tb)
         else:
             await attempt_add_reaction(self.message, emojis["error"])
-            tmsg = await send_traceback(self.message.author, 8, exc_type, exc_val, exc_tb)
-            self.loop.create_task(traceback_sender(self.message, tmsg, self.bot))
+            if not settings["channel_tracebacks"]:
+                await send_traceback(self.message.author, 8, exc_type, exc_val, exc_tb)
+            else:
+                self.loop.create_task(traceback_sender(self.message, self.bot, exc_type, exc_val, exc_tb))
         return True
 
 class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
@@ -229,6 +251,7 @@ def setup(bot, **kwargs):
     emojis["tracebacks"] = kwargs.get("tracebacks") or "\N{BLACK DOWN-POINTING DOUBLE TRIANGLE}"
     settings["retain"] = kwargs.get("retain") if not kwargs.get("retain") is None else True
     settings["scope_prefix"] = kwargs.get("scope_prefix") if not kwargs.get("scope_prefix") is None else "_"
+    settings["channel_tracebacks"] = kwargs.get("channel_tracebacks") or False
     bot.add_cog(sub_jsk(bot))
     if kwargs.get("bot_level_cmds"):
         bot.get_cog("sub_jsk").bot_level()
