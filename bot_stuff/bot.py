@@ -39,7 +39,7 @@ class subcontext(commands.Context):
     def created_at(self):
         return self.message.created_at
 
-class Bot(commands.Bot):
+class Bot(commands.AutoShardedBot):
 
     def __init__(self, prefix, owners: list, extension_dir: str = None, **options):
         super().__init__(prefix, **options)
