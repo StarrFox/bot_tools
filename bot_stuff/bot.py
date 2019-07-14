@@ -7,6 +7,7 @@ import os
 import traceback
 import importlib
 import sys
+import asyncio
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
@@ -50,6 +51,7 @@ class Bot(commands.AutoShardedBot):
         self.owners = owners
         self.paginate = paginate
         self.ready_funcs = {}
+        self.logout_funcs = {}
 
     def get_message(self, id):
         return discord.utils.get(
@@ -59,6 +61,9 @@ class Bot(commands.AutoShardedBot):
 
     def add_ready_func(self, func, *args, **kwargs):
         self.ready_funcs[func] = {"args": args, "kwargs": kwargs}
+
+    def add_logout_func(self, func, *args, **kwargs):
+        self.logout_funcs[func] = {"args": args, "kwargs": kwargs}
 
     async def get_context(self, message, cls = None):
         return await super().get_context(message, cls = cls or subcontext)
@@ -119,3 +124,23 @@ class Bot(commands.AutoShardedBot):
             raise commands.errors.ExtensionNotFound(name, e) from e
         else:
             self._load_from_module_spec(lib, name, **kwargs)
+
+    async def logout(self):
+        for extension in tuple(self.extensions):
+            try:
+                self.unload_extension(extension)
+            except Exception:
+                pass
+        for cog in tuple(self.cogs):
+            try:
+                self.remove_cog(cog)
+            except Exception:
+                pass
+        await asyncio.sleep(5)
+        for func in self.logout_funcs.keys():
+            await discord.utils.maybe_coroutine(
+                func,
+                *self.ready_funcs[func]["args"],
+                **self.ready_funcs[func]["kwargs"]
+            )
+        await super().logout()
