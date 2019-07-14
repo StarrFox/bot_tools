@@ -140,7 +140,7 @@ class Bot(commands.AutoShardedBot):
         for func in self.logout_funcs.keys():
             await discord.utils.maybe_coroutine(
                 func,
-                *self.ready_funcs[func]["args"],
-                **self.ready_funcs[func]["kwargs"]
+                *self.logout_funcs[func]["args"],
+                **self.logout_funcs[func]["kwargs"]
             )
         await super().logout()
