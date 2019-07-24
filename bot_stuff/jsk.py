@@ -21,7 +21,7 @@ import discord
 import humanize
 from discord.ext import commands
 
-from jishaku.codeblocks import Codeblock, CodeblockConverter
+from jishaku.codeblocks import Codeblock, codeblock_converter
 from jishaku.meta import __version__
 from jishaku.models import copy_context_with
 from jishaku.functools import AsyncSender
@@ -178,7 +178,7 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
         await ctx.send("\n".join(summary))
 
     @jsk.command(name="py", aliases=["python"])
-    async def jsk_python(self, ctx: commands.Context, *, argument: CodeblockConverter):
+    async def jsk_python(self, ctx: commands.Context, *, argument: codeblock_converter):
         """
         Direct evaluation of Python code.
         """
@@ -216,7 +216,7 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
             scope.clear_intersection(arg_dict)
 
     @jsk.command(name="py_inspect", aliases=["pyi", "python_inspect", "pythoninspect"])
-    async def jsk_python_inspect(self, ctx: commands.Context, *, argument: CodeblockConverter):
+    async def jsk_python_inspect(self, ctx: commands.Context, *, argument: codeblock_converter):
         """
         Evaluation of Python code with inspect information.
         """
@@ -256,7 +256,7 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
         return await ctx.send(f"Command `{alt_ctx.command.qualified_name}` finished in {end - start:.3f}s.")
 
     @jsk.command(name="shell", aliases=["sh"])
-    async def jsk_shell(self, ctx: commands.Context, *, argument: CodeblockConverter):
+    async def jsk_shell(self, ctx: commands.Context, *, argument: codeblock_converter):
         """
         Executes statements in the system shell.
         This uses the system shell as defined in $SHELL, or `/bin/bash` otherwise.
