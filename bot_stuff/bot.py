@@ -69,12 +69,7 @@ class Bot(commands.AutoShardedBot):
         return await super().get_context(message, cls = cls or subcontext)
 
     async def on_message_edit(self, before, after):
-        checks = [
-            before.embeds and after.embeds,
-            not after.pinned,
-            not before.author.bot
-        ]
-        if all(checks):
+        if before.content != after.content:
             await self.process_commands(after)
 
     async def on_ready(self):
