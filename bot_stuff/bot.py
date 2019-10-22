@@ -69,7 +69,7 @@ class Bot(commands.AutoShardedBot):
         return await super().get_context(message, cls = cls or subcontext)
 
     async def on_message_edit(self, before, after):
-        if before.content != after.content:
+        if before.content != after.content and not before.author.bot:
             await self.process_commands(after)
 
     async def on_ready(self):
