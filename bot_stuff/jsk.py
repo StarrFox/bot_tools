@@ -1,5 +1,6 @@
-from jishaku import cog
+from jishaku.cog import JishakuBase, jsk
 from jishaku.exception_handling import attempt_add_reaction, do_after_sleep, ReplResponseReactor
+from jishaku.metacog import GroupCogMeta
 
 import asyncio
 import collections
@@ -115,7 +116,7 @@ class ReactorSub(ReplResponseReactor):
                 self.loop.create_task(traceback_sender(self.message, self.bot, exc_type, exc_val, exc_tb))
         return True
 
-class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
+class sub_jsk(JishakuBase, metaclass=GroupCogMeta, command_parent=jsk, command_attrs=dict(hidden=True)):
 
     def __init__(self, bot):
         self.bot = bot
@@ -139,43 +140,6 @@ class sub_jsk(cog.Jishaku, command_attrs=dict(hidden=True)):
             cmd.cog = self
             self.bot.add_command(cmd)
         self.bot.add_command(just_jsk)
-
-    # This is here in order to add subcommands
-    @commands.group(name="jishaku", aliases=["jsk"], invoke_without_command=True, ignore_extra=False)
-    async def jsk(self, ctx: commands.Context):
-        """
-        The Jishaku debug and diagnostic commands.
-        This command on its own gives a status brief.
-        All other functionality is within its subcommands.
-        """
-        summary = [
-            f"Jishaku v{__version__}, discord.py `{package_version('discord.py')}`, "
-            f"`Python {sys.version}` on `{sys.platform}`".replace("\n", ""),
-            f"Module was loaded {humanize.naturaltime(self.load_time)}, "
-            f"cog was loaded {humanize.naturaltime(self.start_time)}.",
-            ""
-        ]
-        if psutil:
-            proc = psutil.Process()
-            with proc.oneshot():
-                mem = proc.memory_full_info()
-                summary.append(f"Using {humanize.naturalsize(mem.rss)} physical memory and "
-                               f"{humanize.naturalsize(mem.vms)} virtual memory, "
-                               f"{humanize.naturalsize(mem.uss)} of which unique to this process.")
-                name = proc.name()
-                pid = proc.pid
-                thread_count = proc.num_threads()
-                summary.append(f"Running on PID {pid} (`{name}`) with {thread_count} thread(s).")
-                summary.append("")  # blank line
-        cache_summary = f"{len(self.bot.guilds)} guild(s) and {len(self.bot.users)} user(s)"
-        if isinstance(self.bot, discord.AutoShardedClient):
-            summary.append(f"This bot is automatically sharded and can see {cache_summary}.")
-        elif self.bot.shard_count:
-            summary.append(f"This bot is manually sharded and can see {cache_summary}.")
-        else:
-            summary.append(f"This bot is not sharded and can see {cache_summary}.")
-        summary.append(f"Average websocket latency: {round(self.bot.latency * 1000, 2)}ms")
-        await ctx.send("\n".join(summary))
 
     @jsk.command(name="py", aliases=["python"])
     async def jsk_python(self, ctx: commands.Context, *, argument: codeblock_converter):
