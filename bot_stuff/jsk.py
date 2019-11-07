@@ -1,4 +1,4 @@
-from jishaku.cog import JishakuBase, jsk
+from jishaku.cog import jsk, JishakuBase
 from jishaku.exception_handling import attempt_add_reaction, do_after_sleep, ReplResponseReactor
 from jishaku.metacog import GroupCogMeta
 
