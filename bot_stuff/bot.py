@@ -1,17 +1,19 @@
-import discord
-from discord.ext import commands
-
-import aiohttp
-import logging
 import os
-import traceback
-import importlib
 import sys
+import aiohttp
 import asyncio
+import discord
+import logging
+import importlib
+import traceback
+
+from discord.ext import commands
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
 )
+
+logger = logging.getLogger(__name__)
 
 async def paginate(log, destination):
     paginator = commands.Paginator()
@@ -44,7 +46,6 @@ class Bot(commands.AutoShardedBot):
 
     def __init__(self, prefix, owners: list, extension_dir: str = None, **options):
         super().__init__(prefix, **options)
-        self.logger = logging.getLogger(__name__)
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.first_run = True # make on_ready only run once
         self.extension_dir = extension_dir
@@ -91,9 +92,9 @@ class Bot(commands.AutoShardedBot):
                 if not ext.endswith(".py"):
                     continue
                 self.load_extension(f"cogs.{ext.replace('.py', '')}")
-                self.logger.info(f"Loaded {ext}")
+                logger.info(f"Loaded {ext}")
             except:
-                self.logger.critical(f"{ext} failed:\n{traceback.format_exc()}")
+                logger.critical(f"{ext} failed:\n{traceback.format_exc()}")
 
     def _load_from_module_spec(self, lib, key, **kwargs):
         try:

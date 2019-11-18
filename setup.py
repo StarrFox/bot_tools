@@ -5,11 +5,11 @@ setup(
 	author='StarrFox',
 	description='stuff for bots',
 	url='https://github.com/StarrFox/bot_stuff',
-	version="0.0.3",
+	version="0.1.0",
 	packages=['bot_stuff'],
 	install_requires=[
 		'discord.py>=1.1.1,<2.0.0',
-		'jishaku>=1.6.1,<2.0.0'],
+		'jishaku>=1.17.0,<2.0.0'],
 	python_requires='>=3.6.0',
 	license='MIT'
 )

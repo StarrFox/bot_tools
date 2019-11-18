@@ -1,11 +1,11 @@
-import discord
-from discord.ext import commands
-
-import asyncio
-import traceback
-import aiohttp
-from os import system
 import sys
+import asyncio
+import aiohttp
+import discord
+import traceback
+
+from os import system
+from discord.ext import commands
 
 class logger(commands.Cog):
     """
@@ -27,9 +27,8 @@ class logger(commands.Cog):
         log = f"GuildRemlog name={guild.name} id={guild.id} owner={guild.owner} members={guild.member_count}"
         await self.bot.paginate(log, self.log_channel)
 
-    #Pm logger
-    @commands.Cog.listener()
-    async def on_message(self, message):
+    @commands.Cog.listener("on_message")
+    async def pm_logger(self, message):
         if message.guild is None and not message.author.bot:
             log = f"PMlog author={message.author.id} content={message.content}"
             await self.bot.paginate(log, self.log_channel)

@@ -66,7 +66,6 @@ class Help(commands.MinimalHelpCommand):
             self.paginator.add_line('**%s %s**' % (cog.qualified_name, self.commands_heading.lower()))
             for command in filtered:
                 self.add_subcommand_formatting(command)
-
             note = self.get_ending_note()
             if note:
                 self.paginator.add_line()
