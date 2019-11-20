@@ -5,7 +5,7 @@ setup(
 	author='StarrFox',
 	description='stuff for bots',
 	url='https://github.com/StarrFox/bot_stuff',
-	version="0.1.0",
+	version="0.1.1",
 	packages=['bot_stuff'],
 	install_requires=[
 		'discord.py>=1.1.1,<2.0.0',
