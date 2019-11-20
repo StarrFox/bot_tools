@@ -91,7 +91,7 @@ class Bot(commands.AutoShardedBot):
             try:
                 if not ext.endswith(".py"):
                     continue
-                self.load_extension(f"cogs.{ext.replace('.py', '')}")
+                self.load_extension(f"{self.extension_dir}.{ext.replace('.py', '')}")
                 logger.info(f"Loaded {ext}")
             except:
                 logger.critical(f"{ext} failed:\n{traceback.format_exc()}")
