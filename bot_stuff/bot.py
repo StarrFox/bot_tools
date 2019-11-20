@@ -87,7 +87,7 @@ class Bot(commands.AutoShardedBot):
         self.first_run = False
 
     async def load_mods(self):
-        for ext in os.listdir('cogs'):
+        for ext in os.listdir(self.extension_dir):
             try:
                 if not ext.endswith(".py"):
                     continue
