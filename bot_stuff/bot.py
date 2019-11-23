@@ -15,17 +15,17 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-async def paginate(log, destination):
-    paginator = commands.Paginator()
-    while log:
+async def paginate(message, destination, lang=''):
+    paginator = commands.Paginator(prefix=f'```{lang}')
+    while message:
         try:
-            paginator.add_line(log)
-            log = ''
+            paginator.add_line(message)
+            message = ''
         except:
-            paginator.add_line(log[:1992])
-            log = log[1992:]
-        for page in paginator.pages:
-            await destination.send(page)
+            paginator.add_line(message[:1992])
+            message = message[1992:]
+    for page in paginator.pages:
+        await destination.send(page)
 
 class subcontext(commands.Context):
 
