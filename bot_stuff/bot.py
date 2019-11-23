@@ -17,13 +17,14 @@ logger = logging.getLogger(__name__)
 
 async def paginate(message, destination, lang=''):
     paginator = commands.Paginator(prefix=f'```{lang}')
+    extra_factor = 1992 - len(lang)
     while message:
         try:
             paginator.add_line(message)
             message = ''
         except:
-            paginator.add_line(message[:1992])
-            message = message[1992:]
+            paginator.add_line(message[:extra_factor])
+            message = message[extra_factor:]
     for page in paginator.pages:
         await destination.send(page)
 
