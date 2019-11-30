@@ -1,9 +1,6 @@
 from discord.ext import commands
 
-class Help(commands.MinimalHelpCommand):
-    """
-    Minimal minimal help
-    """
+class Minimal(commands.MinimalHelpCommand):
 
     def get_opening_note(self):
         command_name = self.context.invoked_with
@@ -71,6 +68,3 @@ class Help(commands.MinimalHelpCommand):
                 self.paginator.add_line()
                 self.paginator.add_line(note)
         await self.send_pages()
-
-def setup(bot):
-    bot.help_command = Help()

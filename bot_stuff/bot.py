@@ -32,7 +32,7 @@ class subcontext(commands.Context):
 
     async def send(self, content=None, *, tts=False, embed=None, file=None, files=None, delete_after=None, nonce=None):
         """
-        Messages with content over 2000 get paginated and DMed
+        fall back just in case
         """
         if content and len(str(content)) > 2000:
             await self.message.add_reaction("\N{OPEN MAILBOX WITH RAISED FLAG}")
@@ -45,8 +45,9 @@ class subcontext(commands.Context):
 
 class Bot(commands.AutoShardedBot):
 
-    def __init__(self, prefix, owners: list, extension_dir: str = None, **options):
+    def __init__(self, prefix, owners: list, extension_dir: str = None, context = subcontext, **options):
         super().__init__(prefix, **options)
+        self.context = context
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.first_run = True # make on_ready only run once
         self.extension_dir = extension_dir
@@ -67,11 +68,16 @@ class Bot(commands.AutoShardedBot):
     def add_logout_func(self, func, *args, **kwargs):
         self.logout_funcs[func] = {"args": args, "kwargs": kwargs}
 
-    async def get_context(self, message, cls = None):
-        return await super().get_context(message, cls = cls or subcontext)
+    async def process_commands(self, message):
+        if message.author.bot:
+            return
+
+        ctx = await self.get_context(message, cls=self.context)
+
+        await self.invoke(ctx)
 
     async def on_message_edit(self, before, after):
-        if before.content != after.content and not before.author.bot:
+        if before.content != after.content:
             await self.process_commands(after)
 
     async def on_ready(self):
@@ -93,9 +99,8 @@ class Bot(commands.AutoShardedBot):
                 if not ext.endswith(".py"):
                     continue
                 self.load_extension(f"{self.extension_dir}.{ext.replace('.py', '')}")
-                logger.info(f"Loaded {ext}")
             except:
-                logger.critical(f"{ext} failed:\n{traceback.format_exc()}")
+                logger.critical(f"Loading {ext} failed.", excinfo=True)
 
     def _load_from_module_spec(self, lib, key, **kwargs):
         try:
@@ -126,6 +131,7 @@ class Bot(commands.AutoShardedBot):
             raise commands.errors.ExtensionNotFound(name, e) from e
         else:
             self._load_from_module_spec(lib, name, **kwargs)
+        logger.info(f"Loaded {name}.")
 
     async def logout(self):
         for extension in tuple(self.extensions):
