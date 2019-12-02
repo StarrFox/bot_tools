@@ -7,7 +7,7 @@ from discord.ext import commands
 from jishaku.cog import jsk
 from jishaku import cog_base
 from jishaku.metacog import GroupCogMeta
-from jishaku.exception_handling import attempt_add_reaction, do_after_sleep, ReplResponseReactor
+from jishaku.exception_handling import attempt_add_reaction, do_after_sleep, ReplResponseReactor, send_traceback
 
 try:
     import psutil
@@ -33,36 +33,28 @@ class get_arg_dict:
         }
         return {f'{self.prefix}{k}': v for k, v in arg_dict.items()}
 
-def get_traceback(verbosity: int, *exc_info):
+async def traceback_sender(msg, bot, emoji: str, *exc_info):
+    await attempt_add_reaction(msg, emoji)
+
     etype, value, trace = exc_info
-    traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace("``", "`\u200b`")
+
+    traceback_content = "".join(traceback.format_exception(etype, value, trace, 8)).replace("``", "`\u200b`")
+
     paginator = commands.Paginator(prefix='```py')
     for line in traceback_content.split('\n'):
         paginator.add_line(line)
-    return paginator
 
-async def traceback_sender(msg, bot, emoji: str, *exc_info):
-    await attempt_add_reaction(msg, emoji)
-    paginator = get_traceback(8, *exc_info)
     try:
         await bot.wait_for(
             "reaction_add",
             check = lambda r, u: u == msg.author and str(r) == emoji and r.message.id == msg.id,
             timeout = 60
         )
-        message = None
         for page in paginator.pages:
-            await msg.channel.send(page)
+            message = await msg.channel.send(page)
         return message
     except:
         pass
-
-async def send_traceback(destination: discord.abc.Messageable, verbosity: int, *exc_info):
-    paginator = get_traceback(verbosity, *exc_info)
-    message = None
-    for page in paginator.pages:
-        message = await destination.send(page)
-    return message
 
 class ReactorSub(ReplResponseReactor):
 

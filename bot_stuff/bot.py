@@ -8,25 +8,14 @@ import importlib
 import traceback
 
 from discord.ext import commands
+from .paginators import BreakPaginator
+from jishaku.paginators import PaginatorInterface
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
 )
 
 logger = logging.getLogger(__name__)
-
-async def paginate(message, destination, lang=''):
-    paginator = commands.Paginator(prefix=f'```{lang}')
-    extra_factor = 1992 - len(lang)
-    while message:
-        try:
-            paginator.add_line(message)
-            message = ''
-        except:
-            paginator.add_line(message[:extra_factor])
-            message = message[extra_factor:]
-    for page in paginator.pages:
-        await destination.send(page)
 
 class subcontext(commands.Context):
 
@@ -35,9 +24,17 @@ class subcontext(commands.Context):
         fall back just in case
         """
         if content and len(str(content)) > 2000:
-            await self.message.add_reaction("\N{OPEN MAILBOX WITH RAISED FLAG}")
-            return await paginate(content, self.author)
-        return await super().send(content=content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after)
+
+            paginator = BreakPaginator(max_size=1985)
+            paginator.add_line(content)
+
+            interface = PaginatorInterface(self.bot, paginator, owner=self.author)
+
+            return (await interface.send_to(self)).message
+
+        else:
+            
+            return await super().send(content=content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after)
 
     @property
     def created_at(self):
@@ -45,14 +42,13 @@ class subcontext(commands.Context):
 
 class Bot(commands.AutoShardedBot):
 
-    def __init__(self, prefix, owners: list, extension_dir: str = None, context = subcontext, **options):
+    def __init__(self, prefix, owners: list = None, extension_dir: str = None, context: commands.context = subcontext, **options):
         super().__init__(prefix, **options)
         self.context = context
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.first_run = True # make on_ready only run once
         self.extension_dir = extension_dir
-        self.owners = owners
-        self.paginate = paginate
+        self.owner_ids = owners
         self.ready_funcs = {}
         self.logout_funcs = {}
 
