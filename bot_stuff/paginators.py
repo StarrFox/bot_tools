@@ -87,7 +87,7 @@ class EmbedDictPaginator(commands.Paginator):
     def pages(self):
         """Returns the rendered list of pages."""
         # we have more than just the prefix in our current page
-        if len(self._current_page) > self._prefix_len:
+        if self._count > 0:
             self.close_page()
         return self._pages
 
@@ -100,7 +100,18 @@ class EmbedDictInterface(PaginatorInterface):
 
     @property
     def pages(self):
-        return self.paginator.pages
+        """
+        Returns the paginator's pages without prematurely closing the active page.
+        """
+        # protected access has to be permitted here to not close the paginator's pages
+
+        # pylint: disable=protected-access
+        paginator_pages = list(self.paginator._pages)
+        if self.paginator._count > 0:
+            paginator_pages.append(self.paginator._current_page)
+        # pylint: enable=protected-access
+
+        return paginator_pages
 
     @property
     def send_kwargs(self):
