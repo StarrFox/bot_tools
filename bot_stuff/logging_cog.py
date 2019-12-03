@@ -20,12 +20,13 @@ class logger(commands.Cog):
         self.bot = bot
         self.logs = logging.getLogger(__name__)
         self.logs.propagate = False
-        self.logs.addHandler(
-            DiscordHandler(
-                webhook_url,
-                logging.INFO
+        if not self.logs.handlers:
+            self.logs.addHandler(
+                DiscordHandler(
+                    webhook_url,
+                    logging.INFO
+                )
             )
-        )
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
