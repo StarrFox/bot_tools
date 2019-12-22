@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from jishaku.paginators import PaginatorInterface
 
-from bot_stuff.utils.paginators import BreakPaginator
+from bot_stuff import BreakPaginator
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
