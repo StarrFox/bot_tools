@@ -2,7 +2,7 @@ import logging
 
 import aiohttp
 
-from bot_stuff import BreakPaginator
+from .utils.paginators import BreakPaginator
 
 import asyncio
 
