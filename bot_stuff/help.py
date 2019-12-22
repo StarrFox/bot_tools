@@ -6,14 +6,15 @@ class Minimal(commands.MinimalHelpCommand):
         command_name = self.context.invoked_with
         return f"Use `{self.clean_prefix}{command_name} <command/cog>` for more info on a command/cog."
 
-    def add_bot_commands_formatting(self, commands, heading):
-        if commands:
+    def add_bot_commands_formatting(self, cmds, heading):
+        if cmds:
             # U+2002 Middle Dot, space
-            joined = ', '.join(f"`{c.name}`" for c in commands)
-            self.paginator.add_line(f'**{heading}** - {joined}')
+            joined = ', '.join(f"`{c.name}`" for c in cmds)
+            self.paginator.add_line(f'**{heading}** - {joined}', empty=False)
 
     def add_aliases_formatting(self, aliases):
-        if not aliases: return
+        if not aliases:
+            return
         self.paginator.add_line('**%s** %s' % (self.aliases_heading, ', '.join(aliases)), empty=True)
 
     def add_command_formatting(self, command):
@@ -21,9 +22,9 @@ class Minimal(commands.MinimalHelpCommand):
             self.paginator.add_line(command.description, empty=True)
         self.add_aliases_formatting(command.aliases)
         signature = self.get_command_signature(command)
-        self.paginator.add_line("```")
+        self.paginator.add_line("```", empty=False)
         if command.aliases:
-            self.paginator.add_line(signature)
+            self.paginator.add_line(signature, empty=False)
         else:
             self.paginator.add_line(signature, empty=True)
         if command.help:
@@ -31,7 +32,7 @@ class Minimal(commands.MinimalHelpCommand):
                 self.paginator.add_line(command.help, empty=True)
             except RuntimeError:
                 for line in command.help.splitlines():
-                    self.paginator.add_line(line)
+                    self.paginator.add_line(line, empty=False)
                     self.paginator.add_line()
         self.paginator.add_line("```")
 

@@ -1,21 +1,22 @@
+import asyncio
+import importlib
+import logging
 import os
 import sys
-import aiohttp
-import asyncio
-import discord
-import logging
-import importlib
-import traceback
 
+import aiohttp
+import discord
 from discord.ext import commands
-from .paginators import BreakPaginator
 from jishaku.paginators import PaginatorInterface
+
+from .utils.paginators import BreakPaginator
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s:%(name)s] %(message)s", level=logging.INFO
 )
 
 logger = logging.getLogger(__name__)
+
 
 class subcontext(commands.Context):
 
@@ -33,36 +34,38 @@ class subcontext(commands.Context):
             return (await interface.send_to(self)).message
 
         else:
-            
-            return await super().send(content=content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after)
+
+            return await super().send(
+                content=content,
+                tts=tts,
+                embed=embed,
+                file=file,
+                files=files,
+                delete_after=delete_after
+            )
 
     @property
     def created_at(self):
         return self.message.created_at
 
+
 class Bot(commands.AutoShardedBot):
 
-    def __init__(self, prefix, owners: list = None, extension_dir: str = None, context: commands.context = subcontext, **options):
+    def __init__(self, prefix, *, extension_dir: str = None, context: commands.context = subcontext, **options):
         super().__init__(prefix, **options)
         self.context = context
-        self.session = aiohttp.ClientSession(loop=self.loop)
-        self.first_run = True # make on_ready only run once
-        self.extension_dir = extension_dir
-        self.owner_ids = owners
-        self.ready_funcs = {}
-        self.logout_funcs = {}
+        self.session = aiohttp.ClientSession()
+        if extension_dir:
+            self.load_extensions_from_dir(extension_dir)
 
-    def get_message(self, id):
+    def get_message(self, message_id: int):
+        """
+        Gets a message from cache
+        """
         return discord.utils.get(
             self.cached_messages,
-            id = id
+            id=message_id
         )
-
-    def add_ready_func(self, func, *args, **kwargs):
-        self.ready_funcs[func] = {"args": args, "kwargs": kwargs}
-
-    def add_logout_func(self, func, *args, **kwargs):
-        self.logout_funcs[func] = {"args": args, "kwargs": kwargs}
 
     async def process_commands(self, message):
         if message.author.bot:
@@ -76,26 +79,16 @@ class Bot(commands.AutoShardedBot):
         if before.content != after.content:
             await self.process_commands(after)
 
-    async def on_ready(self):
-        if not self.first_run:
-            return
-        for func in self.ready_funcs.keys():
-            await discord.utils.maybe_coroutine(
-                func,
-                *self.ready_funcs[func]["args"],
-                **self.ready_funcs[func]["kwargs"]
-            )
-        if self.extension_dir:
-            await self.load_mods()
-        self.first_run = False
-
-    async def load_mods(self):
-        for ext in os.listdir(self.extension_dir):
+    def load_extensions_from_dir(self, directory: str):
+        """
+        Loads any python files in a directory as extensions
+        """
+        for ext in os.listdir(directory):
             try:
                 if not ext.endswith(".py"):
                     continue
-                self.load_extension(f"{self.extension_dir}.{ext.replace('.py', '')}")
-            except:
+                self.load_extension(f"{directory}.{ext.replace('.py', '')}")
+            except commands.ExtensionError:
                 logger.critical(f"Loading {ext} failed.", excinfo=True)
 
     def _load_from_module_spec(self, lib, key, **kwargs):
@@ -133,13 +126,10 @@ class Bot(commands.AutoShardedBot):
         for extension in tuple(self.extensions):
             try:
                 self.unload_extension(extension)
-            except Exception:
+            except commands.ExtensionFailed:
                 pass
         for cog in tuple(self.cogs):
-            try:
-                self.remove_cog(cog)
-            except Exception:
-                pass
+            self.remove_cog(cog)
         await asyncio.sleep(5)
         for func in self.logout_funcs.keys():
             await discord.utils.maybe_coroutine(
