@@ -1,10 +1,12 @@
-import aiohttp
 import logging
 
-from .paginators import BreakPaginator
+import aiohttp
+
+from bot_stuff.utils.paginators import BreakPaginator
+
+import asyncio
 
 class EmojiFormatter(logging.Formatter):
-
     DEFAULTEMOJI = {
         'notset': '',
         'debug': '\N{BLACK QUESTION MARK ORNAMENT}',
@@ -16,20 +18,22 @@ class EmojiFormatter(logging.Formatter):
         'critical': '\N{RADIOACTIVE SIGN}\N{VARIATION SELECTOR-16}'
     }
 
+    # TODO: add exception info adding (See super class record.exc_info)
     def format(self, record):
         s = super().format(record)
         levelname = record.levelname
         return self.DEFAULTEMOJI[levelname.lower()] + ' ' + s
 
+
 class DiscordHandler(logging.Handler):
 
     def __init__(self,
-        webhook_url: str,
-        level: int = logging.NOTSET,
-        session: aiohttp.ClientSession = None,
-        formatter: logging.Formatter = None,
-        **webhook_json
-    ):
+                 webhook_url: str,
+                 level: int = logging.NOTSET,
+                 session: aiohttp.ClientSession = None,
+                 formatter: logging.Formatter = None,
+                 **webhook_json
+                 ):
         super().__init__(level=level)
         self.webhook_url = webhook_url
         self.session = session or aiohttp.ClientSession()
@@ -48,16 +52,16 @@ class DiscordHandler(logging.Handler):
             if self.webhook_json:
                 data.update(self.webhook_json)
 
-            if not 'username' in data:
+            if 'username' not in data:
                 data['username'] = name
 
             await self.session.post(
                 self.webhook_url,
-                json = data
+                json=data
             )
 
     def emit(self, record):
         message = self.format(record)
-        self.session.loop.create_task(
+        asyncio.create_task(
             self.send_task(message, record.name)
         )

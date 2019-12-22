@@ -1,1 +1,3 @@
+discord.py
 jishaku>=1.17
+aiohttp
